@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>For You</title>
+  <link rel="icon" href="https://cdn.jsdelivr.net/npm/twemoji@14/2/svg/1f382.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f7f3ee;
+      --paper:     #fffefb;
+      --ink:       #1e1a15;
+      --ink-mid:   #5a4f42;
+      --ink-light: #9c8e80;
+      --rose:      #c97a7a;
+      --rose-pale: #f2dada;
+      --gold:      #b89a60;
+      --green:     #7a9e7e;
+    }
+
+    html, body { height: 100%; background: var(--bg); font-family: 'Lora', serif; color: var(--ink); }
+
+    /* subtle grain */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 999;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    }
+
+    /* floating petals background */
+    .petals { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+    .petal {
+      position: absolute; top: -40px;
+      font-size: 1.1rem; opacity: 0.45;
+      animation: fall linear infinite;
+    }
+    @keyframes fall {
+      0%   { transform: translateY(0)   rotate(0deg)   translateX(0); opacity: 0; }
+      10%  { opacity: 0.45; }
+      90%  { opacity: 0.35; }
+      100% { transform: translateY(110vh) rotate(360deg) translateX(60px); opacity: 0; }
+    }
+
+    /* ── SCREENS ── */
+    .screen {
+      min-height: 100vh; display: flex; align-items: center;
+      justify-content: center; padding: 2rem; position: relative; z-index: 1;
+    }
+
+    /* ── LOGIN ── */
+    #login-screen { flex-direction: column; }
+
+    .gift-box {
+      width: min(400px, 92vw);
+      animation: rise 1s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(36px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .gift-top {
+      background: var(--rose);
+      border-radius: 6px 6px 0 0;
+      padding: 1.6rem 2rem 1.2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ribbon horizontal */
+    .gift-top::before {
+      content: '';
+      position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 3px; background: rgba(255,255,255,0.35);
+    }
+    /* ribbon vertical */
+    .gift-top::after {
+      content: '';
+      position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+      height: 3px; background: rgba(255,255,255,0.35);
+    }
+
+    .gift-emoji {
+      font-size: 3rem; display: block; margin-bottom: 0.4rem;
+      position: relative; z-index: 1;
+      animation: bounce 2.5s ease-in-out infinite;
+    }
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-6px); }
+    }
+
+    .gift-tagline {
+      font-family: 'Lora', serif;
+      font-style: italic;
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.92);
+      position: relative; z-index: 1;
+    }
+
+    .gift-body {
+      background: var(--paper);
+      border: 1px solid rgba(30,26,21,0.1);
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      padding: 2rem 2rem 1.8rem;
+      box-shadow: 0 16px 48px rgba(30,26,21,0.1), 0 4px 8px rgba(30,26,21,0.06);
+    }
+
+    .gift-title {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 1.5rem;
+      text-align: center;
+      color: var(--ink);
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+    }
+
+    .gift-sub {
+      text-align: center;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      color: var(--ink-light);
+      margin-bottom: 1.6rem;
+      font-style: italic;
+    }
+
+    .input-row {
+      display: flex;
+      border: 1.5px solid rgba(30,26,21,0.18);
+      border-radius: 4px;
+      overflow: hidden;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    .input-row:focus-within {
+      border-color: var(--rose);
+      box-shadow: 0 0 0 3px var(--rose-pale);
+    }
+
+    #pwd-input {
+      flex: 1; border: none; background: transparent;
+      padding: 0.8rem 1rem;
+      font-family: 'Lora', serif; font-size: 0.88rem;
+      color: var(--ink); outline: none;
+    }
+    #pwd-input::placeholder { color: var(--ink-light); font-style: italic; }
+
+    #open-btn {
+      background: var(--rose); color: #fff; border: none;
+      padding: 0 1.4rem;
+      font-family: 'Lora', serif; font-style: italic; font-size: 0.88rem;
+      cursor: pointer; transition: background 0.2s; white-space: nowrap;
+    }
+    #open-btn:hover { background: #b86868; }
+
+    #error-msg {
+      margin-top: 0.8rem; text-align: center;
+      font-size: 0.78rem; font-style: italic; color: var(--rose);
+      opacity: 0; transform: translateY(-4px);
+      transition: opacity 0.25s, transform 0.25s;
+    }
+    #error-msg.visible { opacity: 1; transform: translateY(0); }
+
+    .login-hint {
+      margin-top: 1.4rem; text-align: center;
+      font-size: 0.82rem; font-style: italic; color: var(--ink-light);
+    }
+
+    /* ── LETTER SCREEN ── */
+    #letter-screen { display: none; padding: 3rem 1.5rem; align-items: flex-start; }
+
+    @keyframes unfold {
+      from { opacity: 0; transform: translateY(20px) scaleY(0.97); }
+      to   { opacity: 1; transform: translateY(0) scaleY(1); }
+    }
+
+    .letter-wrap { position: relative; display: inline-block; max-width: 640px; width: 100%; }
+
+    .letter-paper {
+      background: var(--paper);
+      padding: 3.5rem 4rem;
+      border-radius: 2px;
+      box-shadow:
+        0 2px 4px rgba(30,26,21,0.05),
+        0 12px 40px rgba(30,26,21,0.11),
+        0 40px 80px rgba(30,26,21,0.07);
+      position: relative;
+      animation: unfold 0.7s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    /* top colour band */
+    .letter-paper::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 6px; background: var(--rose);
+      border-radius: 2px 2px 0 0;
+    }
+
+    /* ruled lines */
+    .letter-lines {
+      position: absolute; inset: 6px 0 0 0; pointer-events: none;
+      background-image: repeating-linear-gradient(
+        to bottom, transparent, transparent 31px,
+        rgba(30,26,21,0.045) 31px, rgba(30,26,21,0.045) 32px
+      );
+      background-position: 0 3.5rem;
+    }
+
+    .letter-date {
+      font-size: 0.8rem; color: var(--ink-light); font-style: italic;
+      text-align: right; margin-bottom: 1.8rem; position: relative;
+    }
+
+    #letter-greeting {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 1.45rem; color: var(--ink);
+      margin-bottom: 0.5rem; line-height: 1.4; position: relative;
+    }
+
+    .japanese-opener {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 1rem; color: var(--ink-mid);
+      margin-bottom: 1.6rem; line-height: 1.9;
+      white-space: pre-wrap; position: relative;
+    }
+
+    #letter-body {
+      font-size: 1.03rem; line-height: 2;
+      color: var(--ink); white-space: pre-wrap; position: relative;
+    }
+
+    .letter-closer {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 1rem; color: var(--ink-mid);
+      margin-top: 1.6rem; margin-bottom: 0;
+      white-space: pre-wrap; position: relative;
+    }
+
+    #letter-sign {
+      margin-top: 1.8rem;
+      font-style: italic; font-size: 1rem; color: var(--ink-mid);
+      position: relative;
+    }
+
+    .sticker {
+      position: absolute; font-size: 1.7rem;
+      pointer-events: none; user-select: none;
+      animation: sway 4s ease-in-out infinite;
+    }
+    @keyframes sway {
+      0%,100% { transform: rotate(-6deg); }
+      50%      { transform: rotate(6deg); }
+    }
+
+    #back-btn {
+      display: block; margin: 1.6rem auto 0;
+      background: transparent;
+      border: 1.5px solid rgba(30,26,21,0.2);
+      padding: 0.55rem 1.6rem;
+      font-family: 'Lora', serif; font-style: italic;
+      font-size: 0.78rem; color: var(--ink-light);
+      cursor: pointer; border-radius: 3px;
+      transition: all 0.2s;
+    }
+    #back-btn:hover { border-color: var(--rose); color: var(--rose); }
+
+    @media (max-width: 500px) {
+      .letter-paper { padding: 2.5rem 1.6rem; }
+      .gift-body { padding: 1.6rem 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- floating petals -->
+  <div class="petals" id="petals"></div>
+
+  <!-- ── LOGIN ── -->
+  <div class="screen" id="login-screen">
+    <div class="gift-box">
+      <div class="gift-top">
+        <span class="gift-emoji">🎂</span>
+        <p class="gift-tagline">Someone left something here for you</p>
+      </div>
+      <div class="gift-body">
+        <h1 class="gift-title">Happy Birthday</h1>
+        <p class="gift-sub">enter your secret password to open</p>
+        <div class="input-row">
+          <input type="password" id="pwd-input" placeholder="your password…" autocomplete="off"/>
+          <button id="open-btn" onclick="unlock()">Open ✦</button>
+        </div>
+        <p id="error-msg">That doesn't seem right — try again!</p>
+        <p class="login-hint">You'll know your password when you see it 🌸</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LETTER ── -->
+  <div class="screen" id="letter-screen">
+    <div style="max-width:640px;width:100%;">
+      <div class="letter-wrap" id="letter-wrap">
+        <div class="letter-paper">
+          <div class="letter-lines"></div>
+          <p class="letter-date" id="letter-date"></p>
+          <p id="letter-greeting"></p>
+          <p class="japanese-opener" id="japanese-opener"></p>
+          <p id="letter-body"></p>
+          <p class="letter-closer" id="letter-closer"></p>
+          <p id="letter-sign"></p>
+        </div>
+      </div>
+      <button id="back-btn" onclick="goBack()">← close letter</button>
+    </div>
+  </div>
+
+  <script>
+    // ── PETAL GENERATOR ──────────────────────────────
+    const petalEmojis = ['🌸','🌷','✿','❀','🌺','🌼'];
+    const petalContainer = document.getElementById('petals');
+    for (let i = 0; i < 18; i++) {
+      const p = document.createElement('span');
+      p.className = 'petal';
+      p.textContent = petalEmojis[Math.floor(Math.random() * petalEmojis.length)];
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.fontSize = (0.8 + Math.random() * 0.7) + 'rem';
+      p.style.animationDuration = (8 + Math.random() * 12) + 's';
+      p.style.animationDelay = (Math.random() * 14) + 's';
+      p.style.opacity = 0.25 + Math.random() * 0.3;
+      petalContainer.appendChild(p);
+    }
+
+    // ── LETTERS ─────────────────────────────────────
+    const letters = {
+      "makochansugoi": {
+        greeting: "Dear Mako,",
+        japaneseOpener: "柴田眞子\n\nお誕生日おめでとう！！いよいよ２２歳になりましたね~\n感謝の気持ちを込めて、これからも健康な日々でありますように！",
+        body: `Happy 22nd birthday to you, Mako! I'm so so sad that I don't get to celebrate your birthday together this time despite it being your last year in Edinburgh. Although you are so far away, your presence still lingers in my mind and I feel comforted knowing that you are trying your best always to achieve your dreams.
+
+You have such a special aura that brings other people to find a direction for themselves. Never have I met someone so resilient, consistent, hardworking and passionate as you in the things you do. You inspire me a lot to become a better person, and I hope in the future you will have many more birthdays, and for some I'll be able to celebrate with you.
+
+You are the humus-rich, loamy soil that is sustaining so many plants and life on earth, not to mention a mixture of peat moss fermenting such complex varieties of life that you are fighting so hard to sustain. Your garden is full of life, of bees pollinating, of worms massaging the soil, of fungi helping to return everything down to Earth.
+
+Mako, you are a gift and it was my ultimate pleasure meeting you. Usually for my religious friends, I'd say I wish you happiness here and hereafter. But for you, I wish you happiness on Earth, and may that happiness fertilise so much more life when you return to it.`,
+        closer: "また会おうね！",
+        sign: "With Love,\nLuqman",
+        color: "#fdf6f6",
+        stickers: [
+          { emoji: "🌸", top: "-22px", left: "-18px" },
+          { emoji: "🎂", top: "-20px", right: "-18px" },
+          { emoji: "🌿", bottom: "-18px", left: "24px" },
+          { emoji: "✨", bottom: "-18px", right: "24px" },
+        ]
+      }
+      // Add more friends here following the same pattern
+    };
+
+    // Set date
+    document.getElementById('letter-date').textContent = new Date().toLocaleDateString('en-GB', {
+      day: 'numeric', month: 'long', year: 'numeric'
+    });
+
+    document.getElementById('pwd-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') unlock();
+    });
+
+    function unlock() {
+      const input = document.getElementById('pwd-input').value.trim().toLowerCase();
+      const letter = letters[input];
+      const errMsg = document.getElementById('error-msg');
+
+      if (letter) {
+        errMsg.classList.remove('visible');
+
+        document.getElementById('letter-greeting').textContent    = letter.greeting;
+        document.getElementById('japanese-opener').textContent    = letter.japaneseOpener || '';
+        document.getElementById('letter-body').textContent        = letter.body;
+        document.getElementById('letter-closer').textContent      = letter.closer || '';
+        document.getElementById('letter-sign').textContent        = letter.sign;
+
+        // background colour
+        document.body.style.backgroundColor = letter.color || '#f7f3ee';
+
+        // stickers
+        document.querySelectorAll('.sticker').forEach(s => s.remove());
+        const wrap = document.getElementById('letter-wrap');
+        if (letter.stickers) {
+          letter.stickers.forEach(s => {
+            const el = document.createElement('span');
+            el.className = 'sticker';
+            el.textContent = s.emoji;
+            Object.assign(el.style, {
+              top:    s.top    || 'auto',
+              bottom: s.bottom || 'auto',
+              left:   s.left   || 'auto',
+              right:  s.right  || 'auto',
+            });
+            wrap.appendChild(el);
+          });
+        }
+
+        document.getElementById('login-screen').style.display = 'none';
+        const ls = document.getElementById('letter-screen');
+        ls.style.display = 'flex';
+        ls.style.animation = 'none';
+        ls.offsetHeight;
+        ls.style.animation = '';
+        window.scrollTo(0, 0);
+      } else {
+        errMsg.classList.remove('visible');
+        void errMsg.offsetWidth;
+        errMsg.classList.add('visible');
+        document.getElementById('pwd-input').select();
+      }
+    }
+
+    function goBack() {
+      document.getElementById('letter-screen').style.display = 'none';
+      document.getElementById('login-screen').style.display  = 'flex';
+      document.getElementById('pwd-input').value = '';
+      document.getElementById('error-msg').classList.remove('visible');
+      document.body.style.backgroundColor = '#f7f3ee';
+      document.querySelectorAll('.sticker').forEach(s => s.remove());
+    }
+  </script>
+</body>
+</html>
